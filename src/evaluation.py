@@ -1,5 +1,6 @@
 """Deterministic retrieval evaluation metrics for RAGWatch."""
 
+import math
 from typing import Any
 
 
@@ -98,3 +99,50 @@ def reciprocal_rank(
             return 1 / rank
 
     return 0.0
+
+
+def ndcg_at_k(
+    relevance_labels: list[dict[str, Any]],
+    ranked_document_ids: list[str],
+    k: int,
+) -> float:
+    """Calculate normalized discounted cumulative gain for one question.
+
+    For a result at rank ``r`` (starting at 1), its gain is ``2^grade - 1``
+    and its discount is ``log2(r + 1)``. Documents missing from the relevance
+    labels have grade 0 and contribute no gain. DCG is the discounted gain
+    sum for the first ``k`` retrieved documents. IDCG uses the same formula
+    on relevance grades sorted from highest to lowest, limited to ``k``.
+
+    Return ``DCG / IDCG``. If IDCG is zero (there are no positive-grade
+    documents), return 0.0, matching the zero-result behavior of the other
+    metrics. A ``k`` larger than the ranking or the number of relevant
+    documents simply uses the available results and labels.
+    """
+    if not isinstance(k, int) or isinstance(k, bool) or k < 1:
+        raise ValueError("k must be a positive integer.")
+
+    relevant_ids = _validated_relevant_ids(relevance_labels, ranked_document_ids)
+    grades_by_id = {
+        label["document_id"]: label["grade"] for label in relevance_labels
+    }
+
+    def discounted_gain(grade: int, rank: int) -> float:
+        return (2**grade - 1) / math.log2(rank + 1)
+
+    dcg = sum(
+        discounted_gain(grades_by_id.get(document_id, 0), rank)
+        for rank, document_id in enumerate(ranked_document_ids[:k], start=1)
+    )
+
+    ideal_grades = sorted(
+        (grades_by_id[document_id] for document_id in relevant_ids), reverse=True
+    )[:k]
+    idcg = sum(
+        discounted_gain(grade, rank)
+        for rank, grade in enumerate(ideal_grades, start=1)
+    )
+
+    if idcg == 0:
+        return 0.0
+    return dcg / idcg

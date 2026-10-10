@@ -1,11 +1,12 @@
 """Tests for deterministic retrieval metric calculations."""
 
+import math
 from pathlib import Path
 
 import pytest
 
 from src.dataset import load_dataset
-from src.evaluation import recall_at_k, reciprocal_rank
+from src.evaluation import ndcg_at_k, recall_at_k, reciprocal_rank
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -132,3 +133,68 @@ def test_reciprocal_rank_requires_lists():
 
     with pytest.raises(ValueError, match="ranked_document_ids must be a list"):
         reciprocal_rank([], None)
+
+
+def test_ndcg_is_one_for_perfect_lighthouse_ranking(lighthouse_relevance):
+    ranked_ids = ["doc_lighthouse_signal", "doc_lighthouse_location"]
+
+    assert ndcg_at_k(lighthouse_relevance, ranked_ids, k=2) == pytest.approx(1.0)
+
+
+def test_ndcg_is_lower_for_reversed_lighthouse_ranking(lighthouse_relevance):
+    ranked_ids = ["doc_lighthouse_location", "doc_lighthouse_signal"]
+
+    # DCG = 1/log2(2) + 7/log2(3); IDCG = 7/log2(2) + 1/log2(3).
+    dcg = 1 + 7 / math.log2(3)
+    idcg = 7 + 1 / math.log2(3)
+
+    assert ndcg_at_k(lighthouse_relevance, ranked_ids, k=2) == pytest.approx(
+        dcg / idcg
+    )
+    assert dcg / idcg < 1.0
+
+
+def test_ndcg_changes_with_k(lighthouse_relevance):
+    ranked_ids = ["doc_lighthouse_location", "doc_lighthouse_signal"]
+
+    assert ndcg_at_k(lighthouse_relevance, ranked_ids, k=1) == pytest.approx(1 / 7)
+    assert ndcg_at_k(lighthouse_relevance, ranked_ids, k=2) > 1 / 7
+
+
+def test_ndcg_penalizes_missing_relevant_results(lighthouse_relevance):
+    result = ndcg_at_k(
+        lighthouse_relevance,
+        ["doc_lighthouse_signal"],
+        k=2,
+    )
+
+    expected = 7 / (7 + 1 / math.log2(3))
+    assert result == pytest.approx(expected)
+
+
+def test_ndcg_returns_zero_when_there_are_no_relevant_labels():
+    assert ndcg_at_k([], ["doc_cafe_hours"], k=1) == 0.0
+
+
+def test_ndcg_returns_zero_for_empty_ranking(lighthouse_relevance):
+    assert ndcg_at_k(lighthouse_relevance, [], k=2) == 0.0
+
+
+@pytest.mark.parametrize("k", [0, -1, True, 1.5])
+def test_ndcg_rejects_invalid_k(lighthouse_relevance, k):
+    with pytest.raises(ValueError, match="k must be a positive integer"):
+        ndcg_at_k(lighthouse_relevance, [], k=k)
+
+
+def test_ndcg_rejects_malformed_relevance_grade():
+    labels = [{"document_id": "doc_one", "grade": -1}]
+
+    with pytest.raises(ValueError, match="grade must be a non-negative integer"):
+        ndcg_at_k(labels, ["doc_one"], k=1)
+
+
+def test_ndcg_rejects_duplicate_ranked_ids():
+    labels = [{"document_id": "doc_one", "grade": 1}]
+
+    with pytest.raises(ValueError, match="Duplicate ranked document ID"):
+        ndcg_at_k(labels, ["doc_one", "doc_one"], k=2)
