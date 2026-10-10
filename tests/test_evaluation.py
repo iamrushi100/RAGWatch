@@ -240,6 +240,40 @@ def test_runner_is_reproducible():
     assert first_run == second_run
 
 
+def test_runner_optionally_adds_threshold_results_without_changing_metrics():
+    baseline = run_evaluation(SAMPLE_DATASET, k=2)
+    result = run_evaluation(
+        SAMPLE_DATASET,
+        k=2,
+        thresholds={"mrr": 0.5},
+    )
+
+    assert result["aggregate_metrics"] == baseline["aggregate_metrics"]
+    assert result["per_question"] == baseline["per_question"]
+    assert result["threshold_check"]["checks"][0]["metric"] == "mrr"
+    assert "failure_analysis" not in result
+
+
+def test_runner_optionally_adds_per_question_failure_analysis():
+    baseline = run_evaluation(SAMPLE_DATASET, k=2)
+    result = run_evaluation(
+        SAMPLE_DATASET,
+        k=2,
+        include_failure_analysis=True,
+    )
+
+    assert result["aggregate_metrics"] == baseline["aggregate_metrics"]
+    assert result["per_question"] == baseline["per_question"]
+    assert [item["question_id"] for item in result["failure_analysis"]] == [
+        item["question_id"] for item in result["per_question"]
+    ]
+
+
+def test_runner_rejects_invalid_requested_thresholds():
+    with pytest.raises(ValueError, match="thresholds.mrr must be a finite number"):
+        run_evaluation(SAMPLE_DATASET, k=2, thresholds={"mrr": float("nan")})
+
+
 @pytest.mark.parametrize("k", [0, -1, True, 1.5])
 def test_runner_rejects_invalid_k(k):
     with pytest.raises(ValueError, match="k must be a positive integer"):

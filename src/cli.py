@@ -41,10 +41,43 @@ def main(arguments: Sequence[str] | None = None) -> int:
         "--output",
         help="optional path for saving the complete evaluation result as JSON",
     )
+    parser.add_argument(
+        "--min-recall-at-k",
+        type=float,
+        help="optional minimum acceptable aggregate Recall@k score (0 to 1)",
+    )
+    parser.add_argument(
+        "--min-mrr",
+        type=float,
+        help="optional minimum acceptable aggregate MRR score (0 to 1)",
+    )
+    parser.add_argument(
+        "--min-ndcg-at-k",
+        type=float,
+        help="optional minimum acceptable aggregate nDCG@k score (0 to 1)",
+    )
+    parser.add_argument(
+        "--failure-analysis",
+        action="store_true",
+        help="include deterministic per-question retrieval diagnostics",
+    )
     args = parser.parse_args(arguments)
 
+    thresholds = {}
+    if args.min_recall_at_k is not None:
+        thresholds["recall_at_k"] = args.min_recall_at_k
+    if args.min_mrr is not None:
+        thresholds["mrr"] = args.min_mrr
+    if args.min_ndcg_at_k is not None:
+        thresholds["ndcg_at_k"] = args.min_ndcg_at_k
+
     try:
-        result = run_evaluation(args.dataset_path, k=args.k)
+        result = run_evaluation(
+            args.dataset_path,
+            k=args.k,
+            thresholds=thresholds if thresholds else None,
+            include_failure_analysis=args.failure_analysis,
+        )
     except ValueError as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
@@ -72,6 +105,19 @@ def main(arguments: Sequence[str] | None = None) -> int:
     print(f"  Recall@{args.k}: {aggregate['recall_at_k']:.3f}")
     print(f"  MRR: {aggregate['mrr']:.3f}")
     print(f"  nDCG@{args.k}: {aggregate['ndcg_at_k']:.3f}")
+
+    threshold_check = result.get("threshold_check")
+    if threshold_check is not None:
+        print("Threshold checks:")
+        print(f"  Overall: {'PASS' if threshold_check['passed'] else 'FAIL'}")
+        for alert in threshold_check["alerts"]:
+            print(f"  Alert: {alert['message']}")
+
+    if args.failure_analysis:
+        print("Failure analysis:")
+        for analysis in result["failure_analysis"]:
+            labels = ", ".join(analysis["diagnostic_labels"]) or "none"
+            print(f"  {analysis['question_id']}: {labels}")
     return 0
 
 

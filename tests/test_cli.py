@@ -62,6 +62,44 @@ def test_cli_saves_json_report_to_nested_output_path(capsys, tmp_path: Path):
     assert report["dataset_id"] == "ragwatch_tiny_sample_v1"
     assert len(report["per_question"]) == 6
     assert "JSON report saved to" in captured.out
+    assert "threshold_check" not in report
+    assert "failure_analysis" not in report
+
+
+def test_cli_exports_requested_thresholds_and_failure_analysis(capsys, tmp_path: Path):
+    output_path = tmp_path / "diagnostic-report.json"
+
+    exit_code = main(
+        [
+            str(SAMPLE_DATASET),
+            "--k",
+            "2",
+            "--output",
+            str(output_path),
+            "--min-mrr",
+            "0.5",
+            "--failure-analysis",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert report["threshold_check"]["checks"][0]["metric"] == "mrr"
+    assert len(report["failure_analysis"]) == len(report["per_question"]) == 6
+    assert "Threshold checks:" in captured.out
+    assert "Failure analysis:" in captured.out
+
+
+def test_cli_reports_invalid_threshold_configuration(capsys):
+    exit_code = main(
+        [str(SAMPLE_DATASET), "--k", "2", "--min-recall-at-k", "1.1"]
+    )
+
+    assert exit_code == 1
+    assert "thresholds.recall_at_k must be a finite number from 0 to 1" in (
+        capsys.readouterr().err
+    )
 
 
 def test_cli_reports_output_write_error(capsys, tmp_path: Path):
