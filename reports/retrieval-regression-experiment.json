@@ -1,0 +1,105 @@
+{
+  "baseline": {
+    "aggregate_metrics": {
+      "mrr": 0.8333333333333334,
+      "ndcg_at_k": 0.8769765845238192,
+      "recall_at_k": 1.0
+    },
+    "per_question": [
+      {
+        "ndcg_at_k": 1.0,
+        "question_id": "q_library_loan_period",
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      {
+        "ndcg_at_k": 0.6309297535714575,
+        "question_id": "q_library_return_place",
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 0.5
+      },
+      {
+        "ndcg_at_k": 1.0,
+        "question_id": "q_bus_museum",
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      {
+        "ndcg_at_k": 1.0,
+        "question_id": "q_garden_schedule",
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      {
+        "ndcg_at_k": 1.0,
+        "question_id": "q_lighthouse_color_and_timing",
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 1.0
+      },
+      {
+        "ndcg_at_k": 0.6309297535714575,
+        "question_id": "q_bakery_ingredient",
+        "recall_at_k": 1.0,
+        "reciprocal_rank": 0.5
+      }
+    ]
+  },
+  "candidate_minus_baseline": {
+    "mrr": -0.7462121212121212,
+    "ndcg_at_k": -0.8769765845238192,
+    "recall_at_k": -1.0
+  },
+  "dataset_id": "ragwatch_tiny_sample_v2",
+  "degradation": {
+    "description": "Reverse the complete TF-IDF ranking for every question. This deliberately severe perturbation demonstrates that the evaluation detects a ranking regression; it is not a realistic retrieval strategy.",
+    "name": "reverse_baseline_ranking"
+  },
+  "degraded": {
+    "aggregate_metrics": {
+      "mrr": 0.08712121212121211,
+      "ndcg_at_k": 0.0,
+      "recall_at_k": 0.0
+    },
+    "per_question": [
+      {
+        "ndcg_at_k": 0.0,
+        "question_id": "q_library_loan_period",
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.08333333333333333
+      },
+      {
+        "ndcg_at_k": 0.0,
+        "question_id": "q_library_return_place",
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.09090909090909091
+      },
+      {
+        "ndcg_at_k": 0.0,
+        "question_id": "q_bus_museum",
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.08333333333333333
+      },
+      {
+        "ndcg_at_k": 0.0,
+        "question_id": "q_garden_schedule",
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.08333333333333333
+      },
+      {
+        "ndcg_at_k": 0.0,
+        "question_id": "q_lighthouse_color_and_timing",
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.09090909090909091
+      },
+      {
+        "ndcg_at_k": 0.0,
+        "question_id": "q_bakery_ingredient",
+        "recall_at_k": 0.0,
+        "reciprocal_rank": 0.09090909090909091
+      }
+    ]
+  },
+  "experiment_id": "controlled-ranking-inversion-v1",
+  "k": 2,
+  "question_count": 6
+}

@@ -9,6 +9,7 @@
 - Added opt-in CLI and runner integration for aggregate threshold checks and per-question failure analysis. Requested diagnostics are exported as top-level `threshold_check` and `failure_analysis` fields; default report fields remain unchanged.
 - Added a read-only Streamlit dashboard at `app.py` for existing JSON reports. Launch locally with `streamlit run app.py` after installing `requirements.txt`.
 - Added fixed-size, overlapping character chunking and changed the sample dataset to chunk-level relevance labels. Original source text and IDs remain available for traceability.
+- Added a controlled ranking-inversion experiment. It evaluates TF-IDF and the reversed ranking against the same loaded dataset and exports both metric summaries plus candidate-minus-baseline differences. See `docs/retrieval_regression.md`.
 
 ## Verified
 - Python 3.13.0 is available.
@@ -28,6 +29,11 @@
 - Result: 99 passed.
 - Command: `python -m pytest -p no:cacheprovider tests --basetemp .pytest_tmp`
 - Result: 155 passed.
+- Focused regression experiment tests and related evaluation tests: `python -m pytest -p no:cacheprovider tests/test_regression_experiment.py tests/test_evaluation.py tests/test_retriever.py tests/test_dataset.py --basetemp .pytest_tmp_regression`
+- Result: 73 passed.
+- Full suite after the experiment changes: `python -m pytest -p no:cacheprovider tests --basetemp .pytest_tmp_regression_full`
+- Result: 163 passed.
+- Experiment report generated locally with `python -m src.regression_experiment` at `reports/retrieval-regression-experiment.json`.
 
 ## Next
 - Connect the SQLite run history and comparisons to the CLI/dashboard workflow in a focused follow-up.
