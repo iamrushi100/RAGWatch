@@ -1,0 +1,79 @@
+{
+  "dataset_id": "ragwatch_tiny_sample_v1",
+  "schema_version": 1,
+  "documents": [
+    {
+      "document_id": "doc_cafe_hours",
+      "text": "Bluebird Cafe opens at 7:00 a.m. and closes at 3:00 p.m. every day."
+    },
+    {
+      "document_id": "doc_library_returns",
+      "text": "Pine Street Library loans books for 14 days. Readers can return books at the front desk."
+    },
+    {
+      "document_id": "doc_bus_museum",
+      "text": "City bus route 4 stops beside the town museum. The stop is called Museum Square."
+    },
+    {
+      "document_id": "doc_garden_watering",
+      "text": "The community garden is watered every Tuesday morning by the green shed."
+    },
+    {
+      "document_id": "doc_lighthouse_signal",
+      "text": "Harbor Point Lighthouse flashes a red light once every 10 seconds after sunset."
+    },
+    {
+      "document_id": "doc_lighthouse_location",
+      "text": "Harbor Point Lighthouse stands on a rocky island at the mouth of the bay."
+    },
+    {
+      "document_id": "doc_bakery_bread",
+      "text": "Maple Lane Bakery makes sourdough bread with a starter prepared from rye flour."
+    }
+  ],
+  "queries": [
+    {
+      "question_id": "q_library_loan_period",
+      "question": "How long can readers borrow books from Pine Street Library?",
+      "relevance": [
+        { "document_id": "doc_library_returns", "grade": 3 }
+      ]
+    },
+    {
+      "question_id": "q_library_return_place",
+      "question": "Where should a reader return a library book?",
+      "relevance": [
+        { "document_id": "doc_library_returns", "grade": 3 }
+      ]
+    },
+    {
+      "question_id": "q_bus_museum",
+      "question": "Which bus route stops near the town museum?",
+      "relevance": [
+        { "document_id": "doc_bus_museum", "grade": 3 }
+      ]
+    },
+    {
+      "question_id": "q_garden_schedule",
+      "question": "On what day is the community garden watered?",
+      "relevance": [
+        { "document_id": "doc_garden_watering", "grade": 3 }
+      ]
+    },
+    {
+      "question_id": "q_lighthouse_color_and_timing",
+      "question": "What color does Harbor Point Lighthouse flash, and how often?",
+      "relevance": [
+        { "document_id": "doc_lighthouse_signal", "grade": 3 },
+        { "document_id": "doc_lighthouse_location", "grade": 1 }
+      ]
+    },
+    {
+      "question_id": "q_bakery_ingredient",
+      "question": "What flour is used to prepare the bakery's sourdough starter?",
+      "relevance": [
+        { "document_id": "doc_bakery_bread", "grade": 3 }
+      ]
+    }
+  ]
+}
