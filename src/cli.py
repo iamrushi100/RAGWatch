@@ -7,8 +7,10 @@ Run from the project root with:
 
 import argparse
 from collections.abc import Sequence
+import sqlite3
 import sys
 
+from src.history import initialize_database, save_run
 from src.reporting import export_json_report
 from src.runner import run_evaluation
 
@@ -40,6 +42,10 @@ def main(arguments: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--output",
         help="optional path for saving the complete evaluation result as JSON",
+    )
+    parser.add_argument(
+        "--history-db",
+        help="optional SQLite path for saving this evaluation in run history",
     )
     parser.add_argument(
         "--min-recall-at-k",
@@ -81,6 +87,15 @@ def main(arguments: Sequence[str] | None = None) -> int:
     except ValueError as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
+
+    if args.history_db is not None:
+        try:
+            initialize_database(args.history_db)
+            run_id = save_run(args.history_db, result)
+        except (OSError, sqlite3.Error, ValueError) as error:
+            print(f"Error saving SQLite history to '{args.history_db}': {error}", file=sys.stderr)
+            return 1
+        print(f"SQLite history run saved: {run_id}")
 
     if args.output:
         try:

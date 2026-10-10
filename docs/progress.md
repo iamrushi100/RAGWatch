@@ -10,6 +10,12 @@
 - Added a read-only Streamlit dashboard at `app.py` for existing JSON reports. Launch locally with `streamlit run app.py` after installing `requirements.txt`.
 - Added fixed-size, overlapping character chunking and changed the sample dataset to chunk-level relevance labels. Original source text and IDs remain available for traceability.
 - Added a controlled ranking-inversion experiment. It evaluates TF-IDF and the reversed ranking against the same loaded dataset and exports both metric summaries plus candidate-minus-baseline differences. See `docs/retrieval_regression.md`.
+- Connected the evaluation CLI to the existing SQLite run-history API with optional `--history-db` storage, and added a read-only run list and comparison section to the Streamlit dashboard.
+
+## SQLite history usage
+- Save an evaluation run to the dashboard-visible database: `python -m src.cli data/sample_dataset.json --k 2 --history-db data/ragwatch_history.sqlite3`
+- Launch the dashboard to inspect and compare saved runs: `streamlit run app.py`
+- History storage is optional. Without `--history-db`, CLI evaluation and JSON report behavior remains unchanged.
 
 ## Verified
 - Python 3.13.0 is available.

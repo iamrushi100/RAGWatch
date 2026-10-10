@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from src.cli import main
+from src.history import list_runs
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -64,6 +65,39 @@ def test_cli_saves_json_report_to_nested_output_path(capsys, tmp_path: Path):
     assert "JSON report saved to" in captured.out
     assert "threshold_check" not in report
     assert "failure_analysis" not in report
+
+
+def test_cli_optionally_saves_evaluation_to_sqlite_history(capsys, tmp_path: Path):
+    database_path = tmp_path / "history.sqlite3"
+
+    exit_code = main(
+        [
+            str(SAMPLE_DATASET),
+            "--k",
+            "2",
+            "--history-db",
+            str(database_path),
+        ]
+    )
+
+    runs = list_runs(database_path)
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert len(runs) == 1
+    assert runs[0]["dataset_id"] == "ragwatch_tiny_sample_v2"
+    assert runs[0]["k"] == 2
+    assert "SQLite history run saved: 1" in captured.out
+
+
+def test_cli_reports_invalid_sqlite_history_path(capsys, tmp_path: Path):
+    database_path = tmp_path / "missing-parent" / "history.sqlite3"
+
+    exit_code = main(
+        [str(SAMPLE_DATASET), "--k", "2", "--history-db", str(database_path)]
+    )
+
+    assert exit_code == 1
+    assert "Error saving SQLite history" in capsys.readouterr().err
 
 
 def test_cli_exports_requested_thresholds_and_failure_analysis(capsys, tmp_path: Path):
