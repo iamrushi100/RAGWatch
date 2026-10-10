@@ -1,0 +1,200 @@
+{
+  "aggregate_metrics": {
+    "mrr": 0.8333333333333334,
+    "ndcg_at_k": 0.8769765845238192,
+    "recall_at_k": 1.0
+  },
+  "dataset_id": "ragwatch_tiny_sample_v2",
+  "failure_analysis": [
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_chunk_ids": [],
+      "missing_relevant_chunk_ids": [],
+      "question_id": "q_library_loan_period",
+      "relevant_chunk_ids": [
+        "doc_library_returns::chunk-0000"
+      ],
+      "retrieved_chunk_ids": [
+        "doc_library_returns::chunk-0000",
+        "doc_library_returns::chunk-0001",
+        "doc_bakery_bread::chunk-0001",
+        "doc_bakery_bread::chunk-0000",
+        "doc_bus_museum::chunk-0000",
+        "doc_bus_museum::chunk-0001",
+        "doc_cafe_hours::chunk-0000",
+        "doc_garden_watering::chunk-0000",
+        "doc_lighthouse_location::chunk-0000",
+        "doc_lighthouse_location::chunk-0001",
+        "doc_lighthouse_signal::chunk-0000",
+        "doc_lighthouse_signal::chunk-0001"
+      ]
+    },
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_chunk_ids": [],
+      "missing_relevant_chunk_ids": [],
+      "question_id": "q_library_return_place",
+      "relevant_chunk_ids": [
+        "doc_library_returns::chunk-0001"
+      ],
+      "retrieved_chunk_ids": [
+        "doc_library_returns::chunk-0000",
+        "doc_library_returns::chunk-0001",
+        "doc_bakery_bread::chunk-0000",
+        "doc_bakery_bread::chunk-0001",
+        "doc_bus_museum::chunk-0000",
+        "doc_bus_museum::chunk-0001",
+        "doc_cafe_hours::chunk-0000",
+        "doc_garden_watering::chunk-0000",
+        "doc_lighthouse_location::chunk-0000",
+        "doc_lighthouse_location::chunk-0001",
+        "doc_lighthouse_signal::chunk-0000",
+        "doc_lighthouse_signal::chunk-0001"
+      ]
+    },
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_chunk_ids": [],
+      "missing_relevant_chunk_ids": [],
+      "question_id": "q_bus_museum",
+      "relevant_chunk_ids": [
+        "doc_bus_museum::chunk-0000"
+      ],
+      "retrieved_chunk_ids": [
+        "doc_bus_museum::chunk-0000",
+        "doc_lighthouse_location::chunk-0001",
+        "doc_bus_museum::chunk-0001",
+        "doc_lighthouse_location::chunk-0000",
+        "doc_garden_watering::chunk-0000",
+        "doc_library_returns::chunk-0001",
+        "doc_bakery_bread::chunk-0000",
+        "doc_bakery_bread::chunk-0001",
+        "doc_cafe_hours::chunk-0000",
+        "doc_library_returns::chunk-0000",
+        "doc_lighthouse_signal::chunk-0000",
+        "doc_lighthouse_signal::chunk-0001"
+      ]
+    },
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_chunk_ids": [],
+      "missing_relevant_chunk_ids": [],
+      "question_id": "q_garden_schedule",
+      "relevant_chunk_ids": [
+        "doc_garden_watering::chunk-0000"
+      ],
+      "retrieved_chunk_ids": [
+        "doc_garden_watering::chunk-0000",
+        "doc_lighthouse_location::chunk-0000",
+        "doc_bus_museum::chunk-0000",
+        "doc_lighthouse_location::chunk-0001",
+        "doc_cafe_hours::chunk-0000",
+        "doc_bus_museum::chunk-0001",
+        "doc_library_returns::chunk-0001",
+        "doc_bakery_bread::chunk-0000",
+        "doc_bakery_bread::chunk-0001",
+        "doc_library_returns::chunk-0000",
+        "doc_lighthouse_signal::chunk-0000",
+        "doc_lighthouse_signal::chunk-0001"
+      ]
+    },
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_chunk_ids": [],
+      "missing_relevant_chunk_ids": [],
+      "question_id": "q_lighthouse_color_and_timing",
+      "relevant_chunk_ids": [
+        "doc_lighthouse_location::chunk-0000",
+        "doc_lighthouse_signal::chunk-0000"
+      ],
+      "retrieved_chunk_ids": [
+        "doc_lighthouse_signal::chunk-0000",
+        "doc_lighthouse_location::chunk-0000",
+        "doc_cafe_hours::chunk-0000",
+        "doc_bakery_bread::chunk-0000",
+        "doc_bakery_bread::chunk-0001",
+        "doc_bus_museum::chunk-0000",
+        "doc_bus_museum::chunk-0001",
+        "doc_garden_watering::chunk-0000",
+        "doc_library_returns::chunk-0000",
+        "doc_library_returns::chunk-0001",
+        "doc_lighthouse_location::chunk-0001",
+        "doc_lighthouse_signal::chunk-0001"
+      ]
+    },
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_chunk_ids": [],
+      "missing_relevant_chunk_ids": [],
+      "question_id": "q_bakery_ingredient",
+      "relevant_chunk_ids": [
+        "doc_bakery_bread::chunk-0001"
+      ],
+      "retrieved_chunk_ids": [
+        "doc_bakery_bread::chunk-0000",
+        "doc_bakery_bread::chunk-0001",
+        "doc_garden_watering::chunk-0000",
+        "doc_bus_museum::chunk-0000",
+        "doc_lighthouse_location::chunk-0001",
+        "doc_bus_museum::chunk-0001",
+        "doc_lighthouse_location::chunk-0000",
+        "doc_library_returns::chunk-0001",
+        "doc_cafe_hours::chunk-0000",
+        "doc_library_returns::chunk-0000",
+        "doc_lighthouse_signal::chunk-0000",
+        "doc_lighthouse_signal::chunk-0001"
+      ]
+    }
+  ],
+  "k": 2,
+  "per_question": [
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_library_loan_period",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 0.6309297535714575,
+      "question_id": "q_library_return_place",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.5
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_bus_museum",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_garden_schedule",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_lighthouse_color_and_timing",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 0.6309297535714575,
+      "question_id": "q_bakery_ingredient",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.5
+    }
+  ],
+  "threshold_check": {
+    "alerts": [],
+    "checks": [
+      {
+        "actual_score": 0.8333333333333334,
+        "metric": "mrr",
+        "passed": true,
+        "threshold": 0.5
+      }
+    ],
+    "passed": true
+  }
+}

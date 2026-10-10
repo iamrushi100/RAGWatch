@@ -14,7 +14,7 @@
 - Added `.github/workflows/tests.yml` to install project dependencies and run the full pytest suite on pushes and pull requests using Python 3.13.
 
 ## SQLite history usage
-- Save an evaluation run to the dashboard-visible database: `python -m src.cli data/sample_dataset.json --k 2 --history-db data/ragwatch_history.sqlite3`
+- Save an evaluation run to the dashboard-visible database: `python -m src.cli data/sample_dataset.json --k 2 --history-db data/ragwatch_history.db`
 - Launch the dashboard to inspect and compare saved runs: `streamlit run app.py`
 - History storage is optional. Without `--history-db`, CLI evaluation and JSON report behavior remains unchanged.
 
@@ -49,5 +49,11 @@
 - Local full-suite command: `python -m pytest -p no:cacheprovider tests --basetemp .pytest_tmp_ci`
 - Result after adding the CI workflow: 171 passed in 6.19s.
 
+## Completion review (2026-10-10)
+- **Completed:** Added `docs/demo.md` with an ordered local evaluation, JSON export, SQLite history, dashboard, and controlled-regression walkthrough. README links to the guide; the history example uses `.db`, which is covered by `.gitignore`.
+- **Verified locally:** The requested command `python -m pytest -p no:cacheprovider tests` initially collected 171 tests but produced 111 passes and 60 fixture setup errors because pytest could not access `C:\Users\ADMIN\AppData\Local\Temp\pytest-of-ADMIN` (WinError 5). With `TEMP` and `TMP` directed to `.venv\pytest_tmp`, the same pytest command passed: 171 passed in 7.12s.
+- **Verified on GitHub:** The `Tests` push workflow for latest pushed commit `18a1935493fac448af4316d68fd64de349d2b200` completed successfully: [run 38068546601](https://github.com/iamrushi100/RAGWatch/actions/runs/38068546601). This run predates the current uncommitted documentation edits.
+- **Remaining:** The complete demo sequence and its dashboard selections have not been re-run from a clean checkout. Current documentation changes still need review and a later push before GitHub Actions can check them.
+
 ## Next
-- Connect the SQLite run history and comparisons to the CLI/dashboard workflow in a focused follow-up.
+- Walk through `docs/demo.md` from a clean Windows PowerShell checkout, confirm the dashboard displays the generated report and compares the two runs, then review the untracked artifacts before publishing the documentation changes.

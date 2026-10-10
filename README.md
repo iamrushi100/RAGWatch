@@ -22,6 +22,9 @@ retrieval; it does not generate or judge answers.
 - A controlled experiment that reverses the baseline ranking to demonstrate
   that the metrics can detect a deliberately degraded ordering.
 
+For a command-by-command local walkthrough, see
+[`docs/demo.md`](docs/demo.md).
+
 ## Architecture
 
 ```mermaid
@@ -51,6 +54,9 @@ The runner reuses one retriever and the same metric functions for ordinary
 evaluations. Threshold checks and failure analysis are opt-in. SQLite history
 is also optional. The dashboard reads existing JSON and SQLite files; it does
 not start an evaluation when the page refreshes.
+
+For the detailed data flow and module responsibilities, see
+[`docs/architecture.md`](docs/architecture.md).
 
 ## Technology
 
@@ -153,7 +159,7 @@ History is optional. This command evaluates the sample and saves the completed
 run in a local SQLite file under `data/`:
 
 ```powershell
-python -m src.cli data/sample_dataset.json --k 2 --history-db data/ragwatch_history.sqlite3
+python -m src.cli data/sample_dataset.json --k 2 --history-db data/ragwatch_history.db
 ```
 
 Run it again to create another run. From the repository root, launch the

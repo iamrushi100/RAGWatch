@@ -1,0 +1,182 @@
+{
+  "aggregate_metrics": {
+    "mrr": 1.0,
+    "ndcg_at_k": 1.0,
+    "recall_at_k": 1.0
+  },
+  "dataset_id": "ragwatch_tiny_sample_v1",
+  "failure_analysis": [
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_document_ids": [],
+      "missing_relevant_document_ids": [],
+      "question_id": "q_library_loan_period",
+      "relevant_document_ids": [
+        "doc_library_returns"
+      ],
+      "retrieved_document_ids": [
+        "doc_library_returns",
+        "doc_bakery_bread",
+        "doc_bus_museum",
+        "doc_cafe_hours",
+        "doc_garden_watering",
+        "doc_lighthouse_location",
+        "doc_lighthouse_signal"
+      ]
+    },
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_document_ids": [],
+      "missing_relevant_document_ids": [],
+      "question_id": "q_library_return_place",
+      "relevant_document_ids": [
+        "doc_library_returns"
+      ],
+      "retrieved_document_ids": [
+        "doc_library_returns",
+        "doc_bakery_bread",
+        "doc_bus_museum",
+        "doc_cafe_hours",
+        "doc_garden_watering",
+        "doc_lighthouse_location",
+        "doc_lighthouse_signal"
+      ]
+    },
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_document_ids": [],
+      "missing_relevant_document_ids": [],
+      "question_id": "q_bus_museum",
+      "relevant_document_ids": [
+        "doc_bus_museum"
+      ],
+      "retrieved_document_ids": [
+        "doc_bus_museum",
+        "doc_garden_watering",
+        "doc_lighthouse_location",
+        "doc_library_returns",
+        "doc_bakery_bread",
+        "doc_cafe_hours",
+        "doc_lighthouse_signal"
+      ]
+    },
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_document_ids": [],
+      "missing_relevant_document_ids": [],
+      "question_id": "q_garden_schedule",
+      "relevant_document_ids": [
+        "doc_garden_watering"
+      ],
+      "retrieved_document_ids": [
+        "doc_garden_watering",
+        "doc_lighthouse_location",
+        "doc_bus_museum",
+        "doc_cafe_hours",
+        "doc_library_returns",
+        "doc_bakery_bread",
+        "doc_lighthouse_signal"
+      ]
+    },
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_document_ids": [],
+      "missing_relevant_document_ids": [],
+      "question_id": "q_lighthouse_color_and_timing",
+      "relevant_document_ids": [
+        "doc_lighthouse_location",
+        "doc_lighthouse_signal"
+      ],
+      "retrieved_document_ids": [
+        "doc_lighthouse_signal",
+        "doc_lighthouse_location",
+        "doc_cafe_hours",
+        "doc_bakery_bread",
+        "doc_bus_museum",
+        "doc_garden_watering",
+        "doc_library_returns"
+      ]
+    },
+    {
+      "diagnostic_labels": [],
+      "misranked_relevant_document_ids": [],
+      "missing_relevant_document_ids": [],
+      "question_id": "q_bakery_ingredient",
+      "relevant_document_ids": [
+        "doc_bakery_bread"
+      ],
+      "retrieved_document_ids": [
+        "doc_bakery_bread",
+        "doc_garden_watering",
+        "doc_bus_museum",
+        "doc_lighthouse_location",
+        "doc_library_returns",
+        "doc_cafe_hours",
+        "doc_lighthouse_signal"
+      ]
+    }
+  ],
+  "k": 2,
+  "per_question": [
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_library_loan_period",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_library_return_place",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_bus_museum",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_garden_schedule",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_lighthouse_color_and_timing",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_bakery_ingredient",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    }
+  ],
+  "threshold_check": {
+    "alerts": [],
+    "checks": [
+      {
+        "actual_score": 1.0,
+        "metric": "recall_at_k",
+        "passed": true,
+        "threshold": 0.8
+      },
+      {
+        "actual_score": 1.0,
+        "metric": "mrr",
+        "passed": true,
+        "threshold": 0.8
+      },
+      {
+        "actual_score": 1.0,
+        "metric": "ndcg_at_k",
+        "passed": true,
+        "threshold": 0.8
+      }
+    ],
+    "passed": true
+  }
+}
