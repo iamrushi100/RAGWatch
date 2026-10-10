@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from src.dataset import load_dataset
-from src.evaluation import recall_at_k
+from src.evaluation import recall_at_k, reciprocal_rank
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -76,3 +76,59 @@ def test_zero_grade_is_not_relevant():
     ]
 
     assert recall_at_k(labels, ["doc_irrelevant"], k=1) == 0.0
+
+
+def test_reciprocal_rank_is_one_for_relevant_result_at_rank_one(lighthouse_relevance):
+    assert reciprocal_rank(
+        lighthouse_relevance,
+        ["doc_lighthouse_signal", "doc_cafe_hours"],
+    ) == 1.0
+
+
+def test_reciprocal_rank_uses_first_relevant_result_at_later_rank(
+    lighthouse_relevance,
+):
+    ranked_ids = [
+        "doc_cafe_hours",
+        "doc_bakery_bread",
+        "doc_lighthouse_location",
+        "doc_lighthouse_signal",
+    ]
+
+    assert reciprocal_rank(lighthouse_relevance, ranked_ids) == pytest.approx(1 / 3)
+
+
+def test_reciprocal_rank_is_zero_when_no_relevant_result_is_retrieved(
+    lighthouse_relevance,
+):
+    assert reciprocal_rank(lighthouse_relevance, ["doc_cafe_hours"]) == 0.0
+
+
+def test_reciprocal_rank_is_zero_for_empty_ranking(lighthouse_relevance):
+    assert reciprocal_rank(lighthouse_relevance, []) == 0.0
+
+
+def test_reciprocal_rank_is_zero_when_no_relevant_labels_exist():
+    assert reciprocal_rank([], ["doc_cafe_hours"]) == 0.0
+
+
+def test_reciprocal_rank_rejects_invalid_relevance_grade():
+    labels = [{"document_id": "doc_one", "grade": -1}]
+
+    with pytest.raises(ValueError, match="grade must be a non-negative integer"):
+        reciprocal_rank(labels, ["doc_one"])
+
+
+def test_reciprocal_rank_rejects_duplicate_ranked_ids():
+    labels = [{"document_id": "doc_one", "grade": 1}]
+
+    with pytest.raises(ValueError, match="Duplicate ranked document ID"):
+        reciprocal_rank(labels, ["doc_one", "doc_one"])
+
+
+def test_reciprocal_rank_requires_lists():
+    with pytest.raises(ValueError, match="relevance_labels must be a list"):
+        reciprocal_rank(None, [])
+
+    with pytest.raises(ValueError, match="ranked_document_ids must be a list"):
+        reciprocal_rank([], None)

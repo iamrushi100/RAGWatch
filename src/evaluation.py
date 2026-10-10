@@ -3,27 +3,11 @@
 from typing import Any
 
 
-def recall_at_k(
+def _validated_relevant_ids(
     relevance_labels: list[dict[str, Any]],
     ranked_document_ids: list[str],
-    k: int,
-) -> float:
-    """Calculate Recall@k for one question.
-
-    A relevance label with a grade greater than zero is relevant. The result
-    is the number of relevant document IDs in the first ``k`` ranked results,
-    divided by the total number of relevant document IDs in the labels. If
-    there are no relevant labels, the result is 0.0 because recall has no
-    positive denominator in that case. A ``k`` larger than the ranking simply
-    includes all returned results.
-
-    ``relevance_labels`` should be the question's ``relevance`` list from a
-    dataset returned by ``src.dataset.load_dataset``. Ranked IDs may include
-    irrelevant documents, but each ID must appear at most once.
-    """
-    if not isinstance(k, int) or isinstance(k, bool) or k < 1:
-        raise ValueError("k must be a positive integer.")
-
+) -> set[str]:
+    """Validate one query's labels and ranking, returning positive-grade IDs."""
     if not isinstance(relevance_labels, list):
         raise ValueError("relevance_labels must be a list.")
     if not isinstance(ranked_document_ids, list):
@@ -60,8 +44,57 @@ def recall_at_k(
             raise ValueError(f"Duplicate ranked document ID '{document_id}'.")
         seen_ranked_ids.add(document_id)
 
+    return relevant_ids
+
+
+def recall_at_k(
+    relevance_labels: list[dict[str, Any]],
+    ranked_document_ids: list[str],
+    k: int,
+) -> float:
+    """Calculate Recall@k for one question.
+
+    A relevance label with a grade greater than zero is relevant. The result
+    is the number of relevant document IDs in the first ``k`` ranked results,
+    divided by the total number of relevant document IDs in the labels. If
+    there are no relevant labels, the result is 0.0 because recall has no
+    positive denominator in that case. A ``k`` larger than the ranking simply
+    includes all returned results.
+
+    ``relevance_labels`` should be the question's ``relevance`` list from a
+    dataset returned by ``src.dataset.load_dataset``. Ranked IDs may include
+    irrelevant documents, but each ID must appear at most once.
+    """
+    if not isinstance(k, int) or isinstance(k, bool) or k < 1:
+        raise ValueError("k must be a positive integer.")
+
+    relevant_ids = _validated_relevant_ids(relevance_labels, ranked_document_ids)
     if not relevant_ids:
         return 0.0
 
     retrieved_relevant_ids = set(ranked_document_ids[:k]) & relevant_ids
     return len(retrieved_relevant_ids) / len(relevant_ids)
+
+
+def reciprocal_rank(
+    relevance_labels: list[dict[str, Any]],
+    ranked_document_ids: list[str],
+) -> float:
+    """Return the reciprocal rank of the first relevant result for one query.
+
+    A document is relevant when its grade is greater than zero. Ranking
+    positions start at 1, so a relevant document at rank 1 contributes 1.0
+    and one at rank 3 contributes 1/3. If no relevant document is retrieved,
+    including when the ranking or relevant-label list is empty, return 0.0.
+
+    The inputs use the same format and validation rules as ``recall_at_k``.
+    This is the per-question value; a future evaluation runner can average
+    these values across its query results to calculate MRR.
+    """
+    relevant_ids = _validated_relevant_ids(relevance_labels, ranked_document_ids)
+
+    for rank, document_id in enumerate(ranked_document_ids, start=1):
+        if document_id in relevant_ids:
+            return 1 / rank
+
+    return 0.0
