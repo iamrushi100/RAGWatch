@@ -14,6 +14,11 @@ machine-readable result to
 python -m src.regression_experiment --dataset data/sample_dataset.json --k 2 --output reports/my-experiment.json
 ```
 
+The CLI refuses to write when the output path already exists, and it always
+rejects an output path that resolves to the input dataset. Choose a new output
+filename for each report; other JSON export commands keep their existing
+overwrite behavior.
+
 The experiment loads the dataset once. It evaluates the unchanged TF-IDF
 baseline, then evaluates the same questions, chunks, and relevance labels
 after reversing each complete baseline ranking. The reversal is the only

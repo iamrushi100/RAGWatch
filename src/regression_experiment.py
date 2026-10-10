@@ -109,8 +109,17 @@ def main(arguments: Sequence[str] | None = None) -> int:
     args = parser.parse_args(arguments)
 
     try:
+        dataset_path = Path(args.dataset)
+        output_path = Path(args.output)
+        if output_path.resolve() == dataset_path.resolve():
+            raise ValueError("The output path must not be the dataset path.")
+        if output_path.exists() or output_path.is_symlink():
+            raise ValueError(
+                f"Output file '{output_path}' already exists; choose a new path."
+            )
+
         result = run_regression_experiment(args.dataset, args.k)
-        output_path = export_json_report(result, args.output)
+        output_path = export_json_report(result, output_path)
     except (OSError, ValueError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1

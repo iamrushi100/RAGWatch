@@ -71,6 +71,32 @@ def test_cli_saves_machine_readable_experiment_result(tmp_path: Path):
     )
 
 
+def test_cli_rejects_existing_output_without_changing_it(tmp_path: Path, capsys):
+    output_path = tmp_path / "existing-report.json"
+    original_text = "keep this file unchanged"
+    output_path.write_text(original_text, encoding="utf-8")
+
+    exit_code = regression_experiment.main(
+        ["--dataset", str(SAMPLE_DATASET), "--output", str(output_path)]
+    )
+
+    assert exit_code == 1
+    assert "already exists" in capsys.readouterr().err
+    assert output_path.read_text(encoding="utf-8") == original_text
+
+
+def test_cli_rejects_output_equal_to_dataset_path(capsys):
+    original_text = SAMPLE_DATASET.read_text(encoding="utf-8")
+
+    exit_code = regression_experiment.main(
+        ["--dataset", str(SAMPLE_DATASET), "--output", str(SAMPLE_DATASET)]
+    )
+
+    assert exit_code == 1
+    assert "must not be the dataset path" in capsys.readouterr().err
+    assert SAMPLE_DATASET.read_text(encoding="utf-8") == original_text
+
+
 @pytest.mark.parametrize("k", [0, -1, True, 1.5])
 def test_experiment_rejects_invalid_k(k):
     with pytest.raises(ValueError, match="k must be a positive integer"):
