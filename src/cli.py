@@ -9,6 +9,7 @@ import argparse
 from collections.abc import Sequence
 import sys
 
+from src.reporting import export_json_report
 from src.runner import run_evaluation
 
 
@@ -36,6 +37,10 @@ def main(arguments: Sequence[str] | None = None) -> int:
         required=True,
         help="positive result cutoff for Recall@k and nDCG@k",
     )
+    parser.add_argument(
+        "--output",
+        help="optional path for saving the complete evaluation result as JSON",
+    )
     args = parser.parse_args(arguments)
 
     try:
@@ -43,6 +48,14 @@ def main(arguments: Sequence[str] | None = None) -> int:
     except ValueError as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
+
+    if args.output:
+        try:
+            report_path = export_json_report(result, args.output)
+        except OSError as error:
+            print(f"Error writing JSON report to '{args.output}': {error}", file=sys.stderr)
+            return 1
+        print(f"JSON report saved to: {report_path}")
 
     print(f"Dataset: {result['dataset_id']} (k={result['k']})")
     print("Per-question results:")

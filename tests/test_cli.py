@@ -47,3 +47,30 @@ def test_cli_reports_malformed_dataset(capsys, tmp_path: Path):
 
     assert exit_code == 1
     assert "invalid JSON" in capsys.readouterr().err
+
+
+def test_cli_saves_json_report_to_nested_output_path(capsys, tmp_path: Path):
+    output_path = tmp_path / "reports" / "nested" / "evaluation.json"
+
+    exit_code = main(
+        [str(SAMPLE_DATASET), "--k", "2", "--output", str(output_path)]
+    )
+
+    captured = capsys.readouterr()
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert report["dataset_id"] == "ragwatch_tiny_sample_v1"
+    assert len(report["per_question"]) == 6
+    assert "JSON report saved to" in captured.out
+
+
+def test_cli_reports_output_write_error(capsys, tmp_path: Path):
+    output_is_directory = tmp_path / "existing_directory"
+    output_is_directory.mkdir()
+
+    exit_code = main(
+        [str(SAMPLE_DATASET), "--k", "2", "--output", str(output_is_directory)]
+    )
+
+    assert exit_code == 1
+    assert "Error writing JSON report" in capsys.readouterr().err

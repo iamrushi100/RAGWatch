@@ -1,0 +1,47 @@
+{
+  "aggregate_metrics": {
+    "mrr": 1.0,
+    "ndcg_at_k": 1.0,
+    "recall_at_k": 1.0
+  },
+  "dataset_id": "ragwatch_tiny_sample_v1",
+  "k": 2,
+  "per_question": [
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_library_loan_period",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_library_return_place",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_bus_museum",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_garden_schedule",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_lighthouse_color_and_timing",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    },
+    {
+      "ndcg_at_k": 1.0,
+      "question_id": "q_bakery_ingredient",
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0
+    }
+  ]
+}
