@@ -11,11 +11,17 @@
 - Added fixed-size, overlapping character chunking and changed the sample dataset to chunk-level relevance labels. Original source text and IDs remain available for traceability.
 - Added a controlled ranking-inversion experiment. It evaluates TF-IDF and the reversed ranking against the same loaded dataset and exports both metric summaries plus candidate-minus-baseline differences. See `docs/retrieval_regression.md`.
 - Connected the evaluation CLI to the existing SQLite run-history API with optional `--history-db` storage, and added a read-only run list and comparison section to the Streamlit dashboard.
+- Added `.github/workflows/tests.yml` to install project dependencies and run the full pytest suite on pushes and pull requests using Python 3.13.
 
 ## SQLite history usage
 - Save an evaluation run to the dashboard-visible database: `python -m src.cli data/sample_dataset.json --k 2 --history-db data/ragwatch_history.sqlite3`
 - Launch the dashboard to inspect and compare saved runs: `streamlit run app.py`
 - History storage is optional. Without `--history-db`, CLI evaluation and JSON report behavior remains unchanged.
+
+## GitHub Actions CI
+- `.github/workflows/tests.yml` runs on every push and pull request using Python 3.13.
+- Dependency install command: `python -m pip install -r requirements.txt`.
+- CI test command: `python -m pytest -p no:cacheprovider tests`.
 
 ## Verified
 - Python 3.13.0 is available.
@@ -40,6 +46,8 @@
 - Full suite after the experiment changes: `python -m pytest -p no:cacheprovider tests --basetemp .pytest_tmp_regression_full`
 - Result: 163 passed.
 - Experiment report generated locally with `python -m src.regression_experiment` at `reports/retrieval-regression-experiment.json`.
+- Local full-suite command: `python -m pytest -p no:cacheprovider tests --basetemp .pytest_tmp_ci`
+- Result after adding the CI workflow: 171 passed in 6.19s.
 
 ## Next
 - Connect the SQLite run history and comparisons to the CLI/dashboard workflow in a focused follow-up.
