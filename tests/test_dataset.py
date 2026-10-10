@@ -22,9 +22,53 @@ def write_dataset(tmp_path: Path, data: object) -> Path:
 def test_loads_repository_sample_dataset():
     dataset = load_dataset(SAMPLE_DATASET)
 
-    assert dataset["dataset_id"] == "ragwatch_tiny_sample_v1"
+    assert dataset["dataset_id"] == "ragwatch_tiny_sample_v2"
     assert len(dataset["documents"]) == 7
     assert len(dataset["queries"]) == 6
+    assert len(dataset["chunks"]) == 12
+    assert all("chunk_id" in label for query in dataset["queries"] for label in query["relevance"])
+
+
+def test_legacy_source_label_is_normalized_when_source_has_one_chunk(tmp_path: Path):
+    original = {
+        "dataset_id": "legacy_single_chunk",
+        "schema_version": 1,
+        "documents": [{"document_id": "doc1", "text": "A short fact."}],
+        "queries": [
+            {
+                "question_id": "q1",
+                "question": "What fact?",
+                "relevance": [{"document_id": "doc1", "grade": 3}],
+            }
+        ],
+    }
+    file_path = write_dataset(tmp_path, original)
+
+    dataset = load_dataset(file_path)
+
+    assert dataset["queries"][0]["relevance"] == [
+        {"chunk_id": "doc1::chunk-0000", "grade": 3}
+    ]
+    # Normalization is in memory; the original fixture is not rewritten.
+    assert json.loads(file_path.read_text(encoding="utf-8")) == original
+
+
+def test_legacy_source_label_is_rejected_when_source_splits(tmp_path: Path):
+    original = {
+        "dataset_id": "legacy_split_source",
+        "schema_version": 1,
+        "documents": [{"document_id": "doc1", "text": "x" * 100}],
+        "queries": [
+            {
+                "question_id": "q1",
+                "question": "Which source?",
+                "relevance": [{"document_id": "doc1", "grade": 2}],
+            }
+        ],
+    }
+
+    with pytest.raises(DatasetError, match="Relabel it with the specific relevant chunk_id"):
+        load_dataset(write_dataset(tmp_path, original))
 
 
 def test_reports_missing_file_clearly(tmp_path: Path):

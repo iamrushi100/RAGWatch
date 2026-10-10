@@ -8,6 +8,7 @@
 - Added deterministic, readable JSON output and creation of missing parent directories.
 - Added opt-in CLI and runner integration for aggregate threshold checks and per-question failure analysis. Requested diagnostics are exported as top-level `threshold_check` and `failure_analysis` fields; default report fields remain unchanged.
 - Added a read-only Streamlit dashboard at `app.py` for existing JSON reports. Launch locally with `streamlit run app.py` after installing `requirements.txt`.
+- Added fixed-size, overlapping character chunking and changed the sample dataset to chunk-level relevance labels. Original source text and IDs remain available for traceability.
 
 ## Verified
 - Python 3.13.0 is available.
@@ -23,7 +24,10 @@
 - Result: 8 passed.
 - Command: `python -m pytest -p no:cacheprovider tests --basetemp .pytest_tmp`
 - Result: 138 passed.
+- Command: `python -m pytest -p no:cacheprovider tests/test_chunking.py tests/test_dataset.py tests/test_retriever.py tests/test_evaluation.py tests/test_failure_analysis.py tests/test_dashboard_data.py --basetemp .pytest_tmp`
+- Result: 99 passed.
+- Command: `python -m pytest -p no:cacheprovider tests --basetemp .pytest_tmp`
+- Result: 155 passed.
 
 ## Next
-- Review the report-export changes before committing this milestone.
-- Plan the next implementation task.
+- Connect the SQLite run history and comparisons to the CLI/dashboard workflow in a focused follow-up.

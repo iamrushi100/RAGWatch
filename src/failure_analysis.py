@@ -14,9 +14,9 @@ def analyze_question(
 
     ``dataset`` is expected to have the validated shape returned by
     ``src.dataset.load_dataset``. ``ranked_results`` uses the retriever's
-    ``(document_id, score)`` pairs, in best-to-worst order. The returned
-    retrieved IDs include the full ranking; ``k`` determines which relevant
-    IDs count as covered or missed.
+    ``(chunk_id, score)`` pairs, in best-to-worst order. The returned
+    retrieved chunk IDs include the full ranking; ``k`` determines which
+    relevant IDs count as covered or missed.
 
     A ``retrieval_miss`` means a positive-grade document is absent from that
     top-k list. A ``ranking_issue`` means a lower-grade relevant document is
@@ -34,25 +34,25 @@ def analyze_question(
     if not isinstance(k, int) or isinstance(k, bool) or k < 1:
         raise ValueError("k must be a positive integer.")
 
-    documents = dataset.get("documents")
+    chunks = dataset.get("chunks")
     queries = dataset.get("queries")
-    if not isinstance(documents, list):
-        raise ValueError("dataset.documents must be a list.")
+    if not isinstance(chunks, list):
+        raise ValueError("dataset.chunks must be a list.")
     if not isinstance(queries, list):
         raise ValueError("dataset.queries must be a list.")
 
-    document_ids: set[str] = set()
-    for index, document in enumerate(documents):
-        if not isinstance(document, dict):
-            raise ValueError(f"dataset.documents[{index}] must be a dictionary.")
-        document_id = document.get("document_id")
-        if not isinstance(document_id, str) or not document_id.strip():
+    chunk_ids: set[str] = set()
+    for index, chunk in enumerate(chunks):
+        if not isinstance(chunk, dict):
+            raise ValueError(f"dataset.chunks[{index}] must be a dictionary.")
+        chunk_id = chunk.get("chunk_id")
+        if not isinstance(chunk_id, str) or not chunk_id.strip():
             raise ValueError(
-                f"dataset.documents[{index}].document_id must be a non-empty string."
+                f"dataset.chunks[{index}].chunk_id must be a non-empty string."
             )
-        if document_id in document_ids:
-            raise ValueError(f"Duplicate document_id '{document_id}'.")
-        document_ids.add(document_id)
+        if chunk_id in chunk_ids:
+            raise ValueError(f"Duplicate chunk_id '{chunk_id}'.")
+        chunk_ids.add(chunk_id)
 
     selected_query = None
     seen_question_ids: set[str] = set()
@@ -83,21 +83,25 @@ def analyze_question(
             raise ValueError(
                 f"Question '{question_id}' relevance[{index}] must be a dictionary."
             )
-        relevant_id = label.get("document_id")
+        if "chunk_id" not in label or "document_id" in label:
+            raise ValueError(
+                f"Question '{question_id}' relevance[{index}] must use 'chunk_id'."
+            )
+        relevant_id = label.get("chunk_id")
         if not isinstance(relevant_id, str) or not relevant_id.strip():
             raise ValueError(
-                f"Question '{question_id}' relevance[{index}].document_id "
+                f"Question '{question_id}' relevance[{index}].chunk_id "
                 "must be a non-empty string."
             )
-        if relevant_id not in document_ids:
+        if relevant_id not in chunk_ids:
             raise ValueError(
-                f"Question '{question_id}' refers to unknown document_id "
+                f"Question '{question_id}' refers to unknown chunk_id "
                 f"'{relevant_id}'."
             )
         if relevant_id in grades_by_id:
             raise ValueError(
                 f"Question '{question_id}' has duplicate relevance label "
-                f"for document '{relevant_id}'."
+                f"for chunk '{relevant_id}'."
             )
         grade = label.get("grade")
         if not isinstance(grade, int) or isinstance(grade, bool) or not 1 <= grade <= 3:
@@ -108,28 +112,28 @@ def analyze_question(
         grades_by_id[relevant_id] = grade
 
     if not isinstance(ranked_results, list):
-        raise ValueError("ranked_results must be a list of (document_id, score) pairs.")
+        raise ValueError("ranked_results must be a list of (chunk_id, score) pairs.")
 
-    ranked_document_ids = []
+    ranked_chunk_ids = []
     seen_ranked_ids: set[str] = set()
     for index, result in enumerate(ranked_results):
         if not isinstance(result, (tuple, list)) or len(result) != 2:
             raise ValueError(
-                f"ranked_results[{index}] must be a (document_id, score) pair."
+                f"ranked_results[{index}] must be a (chunk_id, score) pair."
             )
-        document_id, score = result
-        if not isinstance(document_id, str) or not document_id.strip():
+        chunk_id, score = result
+        if not isinstance(chunk_id, str) or not chunk_id.strip():
             raise ValueError(
-                f"ranked_results[{index}].document_id must be a non-empty string."
+                f"ranked_results[{index}].chunk_id must be a non-empty string."
             )
-        if document_id not in document_ids:
+        if chunk_id not in chunk_ids:
             raise ValueError(
-                f"ranked_results[{index}] refers to unknown document_id "
-                f"'{document_id}'."
+                f"ranked_results[{index}] refers to unknown chunk_id "
+                f"'{chunk_id}'."
             )
-        if document_id in seen_ranked_ids:
-            raise ValueError(f"Duplicate ranked document ID '{document_id}'.")
-        seen_ranked_ids.add(document_id)
+        if chunk_id in seen_ranked_ids:
+            raise ValueError(f"Duplicate ranked chunk ID '{chunk_id}'.")
+        seen_ranked_ids.add(chunk_id)
         if isinstance(score, bool) or not isinstance(score, (int, float)):
             raise ValueError(f"ranked_results[{index}].score must be a finite number.")
         try:
@@ -138,15 +142,17 @@ def analyze_question(
             finite_score = False
         if not finite_score:
             raise ValueError(f"ranked_results[{index}].score must be a finite number.")
-        ranked_document_ids.append(document_id)
+        ranked_chunk_ids.append(chunk_id)
 
-    top_k_ids = ranked_document_ids[:k]
+    top_k_ids = ranked_chunk_ids[:k]
     relevant_ids = sorted(grades_by_id)
     relevant_set = set(relevant_ids)
     retrieved_relevant_ids = [
-        doc_id for doc_id in ranked_document_ids if doc_id in relevant_set
+        chunk_id for chunk_id in ranked_chunk_ids if chunk_id in relevant_set
     ]
-    missing_relevant_ids = [doc_id for doc_id in relevant_ids if doc_id not in top_k_ids]
+    missing_relevant_ids = [
+        chunk_id for chunk_id in relevant_ids if chunk_id not in top_k_ids
+    ]
 
     # A lower-grade relevant passage above a higher-grade one is a label-backed
     # ordering issue. Track the lower-grade passages while preserving rank order.
@@ -163,7 +169,7 @@ def analyze_question(
     diagnostic_labels = []
     if not relevant_ids:
         diagnostic_labels.append("no_relevant_documents")
-    if not ranked_document_ids:
+    if not ranked_chunk_ids:
         diagnostic_labels.append("empty_retrieval_results")
     if missing_relevant_ids:
         diagnostic_labels.append("retrieval_miss")
@@ -172,9 +178,9 @@ def analyze_question(
 
     return {
         "question_id": question_id,
-        "relevant_document_ids": relevant_ids,
-        "retrieved_document_ids": ranked_document_ids,
-        "missing_relevant_document_ids": missing_relevant_ids,
-        "misranked_relevant_document_ids": misranked_ids,
+        "relevant_chunk_ids": relevant_ids,
+        "retrieved_chunk_ids": ranked_chunk_ids,
+        "missing_relevant_chunk_ids": missing_relevant_ids,
+        "misranked_relevant_chunk_ids": misranked_ids,
         "diagnostic_labels": diagnostic_labels,
     }

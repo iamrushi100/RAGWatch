@@ -62,8 +62,11 @@ def main() -> None:
             {
                 "question_id": item["question_id"],
                 "diagnostic_labels": ", ".join(item["diagnostic_labels"]) or "none",
-                "missing_relevant_document_ids": ", ".join(
-                    item["missing_relevant_document_ids"]
+                "missing_relevant_ids": ", ".join(
+                    item.get(
+                        "missing_relevant_chunk_ids",
+                        item.get("missing_relevant_document_ids", []),
+                    )
                 ) or "none",
             }
             for item in failure_analysis

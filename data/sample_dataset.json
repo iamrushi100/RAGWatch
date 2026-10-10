@@ -1,6 +1,6 @@
 {
-  "dataset_id": "ragwatch_tiny_sample_v1",
-  "schema_version": 1,
+  "dataset_id": "ragwatch_tiny_sample_v2",
+  "schema_version": 2,
   "documents": [
     {
       "document_id": "doc_cafe_hours",
@@ -36,43 +36,43 @@
       "question_id": "q_library_loan_period",
       "question": "How long can readers borrow books from Pine Street Library?",
       "relevance": [
-        { "document_id": "doc_library_returns", "grade": 3 }
+        { "chunk_id": "doc_library_returns::chunk-0000", "grade": 3 }
       ]
     },
     {
       "question_id": "q_library_return_place",
       "question": "Where should a reader return a library book?",
       "relevance": [
-        { "document_id": "doc_library_returns", "grade": 3 }
+        { "chunk_id": "doc_library_returns::chunk-0001", "grade": 3 }
       ]
     },
     {
       "question_id": "q_bus_museum",
       "question": "Which bus route stops near the town museum?",
       "relevance": [
-        { "document_id": "doc_bus_museum", "grade": 3 }
+        { "chunk_id": "doc_bus_museum::chunk-0000", "grade": 3 }
       ]
     },
     {
       "question_id": "q_garden_schedule",
       "question": "On what day is the community garden watered?",
       "relevance": [
-        { "document_id": "doc_garden_watering", "grade": 3 }
+        { "chunk_id": "doc_garden_watering::chunk-0000", "grade": 3 }
       ]
     },
     {
       "question_id": "q_lighthouse_color_and_timing",
       "question": "What color does Harbor Point Lighthouse flash, and how often?",
       "relevance": [
-        { "document_id": "doc_lighthouse_signal", "grade": 3 },
-        { "document_id": "doc_lighthouse_location", "grade": 1 }
+        { "chunk_id": "doc_lighthouse_signal::chunk-0000", "grade": 3 },
+        { "chunk_id": "doc_lighthouse_location::chunk-0000", "grade": 1 }
       ]
     },
     {
       "question_id": "q_bakery_ingredient",
       "question": "What flour is used to prepare the bakery's sourdough starter?",
       "relevance": [
-        { "document_id": "doc_bakery_bread", "grade": 3 }
+        { "chunk_id": "doc_bakery_bread::chunk-0001", "grade": 3 }
       ]
     }
   ]

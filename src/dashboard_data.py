@@ -126,15 +126,20 @@ def _validate_report_shape(report: Any) -> dict[str, Any]:
                 raise ReportLoadError(
                     f"Report field 'failure_analysis[{index}]' must be an object."
                 )
-            for name in (
-                "question_id",
-                "diagnostic_labels",
-                "missing_relevant_document_ids",
-            ):
+            for name in ("question_id", "diagnostic_labels"):
                 if name not in analysis:
                     raise ReportLoadError(
                         f"Report is missing 'failure_analysis[{index}].{name}'."
                     )
+            missing_ids_field = (
+                "missing_relevant_chunk_ids"
+                if "missing_relevant_chunk_ids" in analysis
+                else "missing_relevant_document_ids"
+            )
+            if missing_ids_field not in analysis:
+                raise ReportLoadError(
+                    f"Report is missing 'failure_analysis[{index}].missing_relevant_chunk_ids'."
+                )
             if not isinstance(analysis["question_id"], str):
                 raise ReportLoadError(
                     f"Report field 'failure_analysis[{index}].question_id' must be a string."
@@ -146,12 +151,12 @@ def _validate_report_shape(report: Any) -> dict[str, Any]:
                     f"Report field 'failure_analysis[{index}].diagnostic_labels' "
                     "must be a list of strings."
                 )
-            if not isinstance(analysis["missing_relevant_document_ids"], list) or not all(
+            if not isinstance(analysis[missing_ids_field], list) or not all(
                 isinstance(document_id, str)
-                for document_id in analysis["missing_relevant_document_ids"]
+                for document_id in analysis[missing_ids_field]
             ):
                 raise ReportLoadError(
-                    f"Report field 'failure_analysis[{index}].missing_relevant_document_ids' "
+                    f"Report field 'failure_analysis[{index}].{missing_ids_field}' "
                     "must be a list of strings."
                 )
 

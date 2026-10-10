@@ -17,7 +17,7 @@ def test_cli_prints_question_and_aggregate_metrics(capsys):
 
     output = capsys.readouterr().out
     assert exit_code == 0
-    assert "ragwatch_tiny_sample_v1" in output
+    assert "ragwatch_tiny_sample_v2" in output
     assert "q_library_loan_period" in output
     assert "Recall@2" in output
     assert "MRR" in output
@@ -59,7 +59,7 @@ def test_cli_saves_json_report_to_nested_output_path(capsys, tmp_path: Path):
     captured = capsys.readouterr()
     report = json.loads(output_path.read_text(encoding="utf-8"))
     assert exit_code == 0
-    assert report["dataset_id"] == "ragwatch_tiny_sample_v1"
+    assert report["dataset_id"] == "ragwatch_tiny_sample_v2"
     assert len(report["per_question"]) == 6
     assert "JSON report saved to" in captured.out
     assert "threshold_check" not in report

@@ -75,6 +75,24 @@ def test_loads_valid_report_with_optional_fields(tmp_path: Path):
     assert load_report(path, reports) == report
 
 
+def test_loads_chunk_level_failure_analysis_without_rewriting_legacy_reports(
+    tmp_path: Path,
+):
+    report = {
+        **SAMPLE_REPORT,
+        "failure_analysis": [
+            {
+                "question_id": "q_one",
+                "diagnostic_labels": ["retrieval_miss"],
+                "missing_relevant_chunk_ids": ["doc_one::chunk-0001"],
+            }
+        ],
+    }
+    path = write_report(tmp_path / "reports" / "chunk-report.json", report)
+
+    assert load_report(path, tmp_path / "reports") == report
+
+
 def test_rejects_report_path_outside_reports_directory(tmp_path: Path):
     reports = tmp_path / "reports"
     external_path = write_report(tmp_path / "private.json")

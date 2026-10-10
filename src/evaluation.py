@@ -4,6 +4,24 @@ import math
 from typing import Any
 
 
+def _relevance_item_id(label: dict[str, Any], index: int) -> str:
+    """Read a chunk ID, while retaining support for direct legacy metric calls."""
+    has_chunk_id = "chunk_id" in label
+    has_document_id = "document_id" in label
+    if has_chunk_id == has_document_id:
+        raise ValueError(
+            f"relevance_labels[{index}] must contain exactly one of "
+            "'chunk_id' or 'document_id'."
+        )
+    field_name = "chunk_id" if has_chunk_id else "document_id"
+    item_id = label.get(field_name)
+    if not isinstance(item_id, str) or not item_id.strip():
+        raise ValueError(
+            f"relevance_labels[{index}].{field_name} must be a non-empty string."
+        )
+    return item_id
+
+
 def _validated_relevant_ids(
     relevance_labels: list[dict[str, Any]],
     ranked_document_ids: list[str],
@@ -20,14 +38,10 @@ def _validated_relevant_ids(
         if not isinstance(label, dict):
             raise ValueError(f"relevance_labels[{index}] must be a dictionary.")
 
-        document_id = label.get("document_id")
-        if not isinstance(document_id, str) or not document_id.strip():
-            raise ValueError(
-                f"relevance_labels[{index}].document_id must be a non-empty string."
-            )
-        if document_id in seen_label_ids:
-            raise ValueError(f"Duplicate relevance label for document '{document_id}'.")
-        seen_label_ids.add(document_id)
+        item_id = _relevance_item_id(label, index)
+        if item_id in seen_label_ids:
+            raise ValueError(f"Duplicate relevance label for item '{item_id}'.")
+        seen_label_ids.add(item_id)
 
         grade = label.get("grade")
         if not isinstance(grade, int) or isinstance(grade, bool) or grade < 0:
@@ -35,7 +49,7 @@ def _validated_relevant_ids(
                 f"relevance_labels[{index}].grade must be a non-negative integer."
             )
         if grade > 0:
-            relevant_ids.add(document_id)
+            relevant_ids.add(item_id)
 
     seen_ranked_ids: set[str] = set()
     for index, document_id in enumerate(ranked_document_ids):
@@ -124,7 +138,8 @@ def ndcg_at_k(
 
     relevant_ids = _validated_relevant_ids(relevance_labels, ranked_document_ids)
     grades_by_id = {
-        label["document_id"]: label["grade"] for label in relevance_labels
+        _relevance_item_id(label, index): label["grade"]
+        for index, label in enumerate(relevance_labels)
     }
 
     def discounted_gain(grade: int, rank: int) -> float:

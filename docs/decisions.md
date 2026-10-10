@@ -112,3 +112,25 @@ core working and being tested.
   be reached, while each completed part is easier to inspect and
   explain.
 - **Milestone:** Applies throughout development.
+
+## Fixed-size character chunks with overlap
+
+- **Decision:** Split source text into 72-character chunks with a
+  24-character overlap before TF-IDF retrieval. Give each chunk a stable
+  ID made from its source document ID and zero-based chunk index, and
+  retain the source ID and character offsets on each chunk.
+- **Reason:** Chunk-level retrieval makes the ranked evidence closer to
+  what a RAG system would pass to a generator. Overlap keeps some nearby
+  context when a fixed boundary crosses an important phrase.
+- **Alternative considered:** Continue ranking complete source
+  documents, or add a token-aware chunker and another dependency.
+- **Trade-off:** Character boundaries can still split words, and the
+  24-character overlap repeats one third of each default 72-character
+  window. Chunk-level labels need manual review when the source text or
+  chunk settings change.
+- **Compatibility:** New dataset schema version 2 labels relevant
+  `chunk_id` values. Version 1 source-document labels are normalized in
+  memory only when the source produces exactly one chunk; ambiguous
+  multi-chunk labels must be manually relabeled. Existing saved JSON
+  reports and SQLite tables are not rewritten.
+- **Milestone:** Retrieval chunking phase.

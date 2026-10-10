@@ -27,20 +27,20 @@ def lighthouse_relevance():
 
 
 def test_recall_counts_only_relevant_results_in_top_k(lighthouse_relevance):
-    ranked_ids = ["doc_lighthouse_location", "doc_cafe_hours"]
+    ranked_ids = ["doc_lighthouse_location::chunk-0000", "doc_cafe_hours"]
 
     assert recall_at_k(lighthouse_relevance, ranked_ids, k=2) == 0.5
 
 
 def test_recall_changes_with_k(lighthouse_relevance):
-    ranked_ids = ["doc_lighthouse_location", "doc_lighthouse_signal"]
+    ranked_ids = ["doc_lighthouse_location::chunk-0000", "doc_lighthouse_signal::chunk-0000"]
 
     assert recall_at_k(lighthouse_relevance, ranked_ids, k=1) == 0.5
     assert recall_at_k(lighthouse_relevance, ranked_ids, k=2) == 1.0
 
 
 def test_k_larger_than_ranking_uses_all_returned_results(lighthouse_relevance):
-    ranked_ids = ["doc_lighthouse_signal"]
+    ranked_ids = ["doc_lighthouse_signal::chunk-0000"]
 
     assert recall_at_k(lighthouse_relevance, ranked_ids, k=10) == 0.5
 
@@ -67,7 +67,7 @@ def test_rejects_duplicate_ids_in_ranking(lighthouse_relevance):
     with pytest.raises(ValueError, match="Duplicate ranked document ID"):
         recall_at_k(
             lighthouse_relevance,
-            ["doc_lighthouse_signal", "doc_lighthouse_signal"],
+            ["doc_lighthouse_signal::chunk-0000", "doc_lighthouse_signal::chunk-0000"],
             k=2,
         )
 
@@ -84,7 +84,7 @@ def test_zero_grade_is_not_relevant():
 def test_reciprocal_rank_is_one_for_relevant_result_at_rank_one(lighthouse_relevance):
     assert reciprocal_rank(
         lighthouse_relevance,
-        ["doc_lighthouse_signal", "doc_cafe_hours"],
+        ["doc_lighthouse_signal::chunk-0000", "doc_cafe_hours"],
     ) == 1.0
 
 
@@ -94,8 +94,8 @@ def test_reciprocal_rank_uses_first_relevant_result_at_later_rank(
     ranked_ids = [
         "doc_cafe_hours",
         "doc_bakery_bread",
-        "doc_lighthouse_location",
-        "doc_lighthouse_signal",
+        "doc_lighthouse_location::chunk-0000",
+        "doc_lighthouse_signal::chunk-0000",
     ]
 
     assert reciprocal_rank(lighthouse_relevance, ranked_ids) == pytest.approx(1 / 3)
@@ -138,13 +138,13 @@ def test_reciprocal_rank_requires_lists():
 
 
 def test_ndcg_is_one_for_perfect_lighthouse_ranking(lighthouse_relevance):
-    ranked_ids = ["doc_lighthouse_signal", "doc_lighthouse_location"]
+    ranked_ids = ["doc_lighthouse_signal::chunk-0000", "doc_lighthouse_location::chunk-0000"]
 
     assert ndcg_at_k(lighthouse_relevance, ranked_ids, k=2) == pytest.approx(1.0)
 
 
 def test_ndcg_is_lower_for_reversed_lighthouse_ranking(lighthouse_relevance):
-    ranked_ids = ["doc_lighthouse_location", "doc_lighthouse_signal"]
+    ranked_ids = ["doc_lighthouse_location::chunk-0000", "doc_lighthouse_signal::chunk-0000"]
 
     # DCG = 1/log2(2) + 7/log2(3); IDCG = 7/log2(2) + 1/log2(3).
     dcg = 1 + 7 / math.log2(3)
@@ -157,7 +157,7 @@ def test_ndcg_is_lower_for_reversed_lighthouse_ranking(lighthouse_relevance):
 
 
 def test_ndcg_changes_with_k(lighthouse_relevance):
-    ranked_ids = ["doc_lighthouse_location", "doc_lighthouse_signal"]
+    ranked_ids = ["doc_lighthouse_location::chunk-0000", "doc_lighthouse_signal::chunk-0000"]
 
     assert ndcg_at_k(lighthouse_relevance, ranked_ids, k=1) == pytest.approx(1 / 7)
     assert ndcg_at_k(lighthouse_relevance, ranked_ids, k=2) > 1 / 7
@@ -166,7 +166,7 @@ def test_ndcg_changes_with_k(lighthouse_relevance):
 def test_ndcg_penalizes_missing_relevant_results(lighthouse_relevance):
     result = ndcg_at_k(
         lighthouse_relevance,
-        ["doc_lighthouse_signal"],
+        ["doc_lighthouse_signal::chunk-0000"],
         k=2,
     )
 
@@ -205,7 +205,7 @@ def test_ndcg_rejects_duplicate_ranked_ids():
 def test_runner_returns_metrics_for_each_dataset_question():
     result = run_evaluation(SAMPLE_DATASET, k=2)
 
-    assert result["dataset_id"] == "ragwatch_tiny_sample_v1"
+    assert result["dataset_id"] == "ragwatch_tiny_sample_v2"
     assert result["k"] == 2
     assert len(result["per_question"]) == 6
     assert result["per_question"][0]["question_id"] == "q_library_loan_period"
@@ -215,6 +215,19 @@ def test_runner_returns_metrics_for_each_dataset_question():
         "reciprocal_rank",
         "ndcg_at_k",
     }
+
+
+def test_runner_metrics_use_the_labeled_chunk_id_for_return_place():
+    result = run_evaluation(SAMPLE_DATASET, k=2)
+    question_result = next(
+        item
+        for item in result["per_question"]
+        if item["question_id"] == "q_library_return_place"
+    )
+
+    assert question_result["recall_at_k"] == 1.0
+    assert question_result["reciprocal_rank"] == pytest.approx(1 / 2)
+    assert question_result["ndcg_at_k"] == pytest.approx(1 / math.log2(3))
 
 
 def test_runner_aggregates_metrics_as_means_of_question_scores():
@@ -324,5 +337,5 @@ def test_runner_does_not_ignore_retrieval_failure(tmp_path: Path):
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="dataset with no documents"):
+    with pytest.raises(ValueError, match="dataset with no text chunks"):
         run_evaluation(dataset_path, k=2)
