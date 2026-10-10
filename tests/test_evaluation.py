@@ -1,5 +1,6 @@
 """Tests for deterministic retrieval metric calculations."""
 
+import json
 import math
 from pathlib import Path
 
@@ -7,6 +8,7 @@ import pytest
 
 from src.dataset import load_dataset
 from src.evaluation import ndcg_at_k, recall_at_k, reciprocal_rank
+from src.runner import run_evaluation
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -198,3 +200,95 @@ def test_ndcg_rejects_duplicate_ranked_ids():
 
     with pytest.raises(ValueError, match="Duplicate ranked document ID"):
         ndcg_at_k(labels, ["doc_one", "doc_one"], k=2)
+
+
+def test_runner_returns_metrics_for_each_dataset_question():
+    result = run_evaluation(SAMPLE_DATASET, k=2)
+
+    assert result["dataset_id"] == "ragwatch_tiny_sample_v1"
+    assert result["k"] == 2
+    assert len(result["per_question"]) == 6
+    assert result["per_question"][0]["question_id"] == "q_library_loan_period"
+    assert set(result["per_question"][0]) == {
+        "question_id",
+        "recall_at_k",
+        "reciprocal_rank",
+        "ndcg_at_k",
+    }
+
+
+def test_runner_aggregates_metrics_as_means_of_question_scores():
+    result = run_evaluation(SAMPLE_DATASET, k=2)
+
+    for metric_name in ("recall_at_k", "ndcg_at_k"):
+        expected_mean = sum(
+            question_result[metric_name]
+            for question_result in result["per_question"]
+        ) / len(result["per_question"])
+        assert result["aggregate_metrics"][metric_name] == pytest.approx(expected_mean)
+    expected_mrr = sum(
+        question_result["reciprocal_rank"]
+        for question_result in result["per_question"]
+    ) / len(result["per_question"])
+    assert result["aggregate_metrics"]["mrr"] == pytest.approx(expected_mrr)
+
+
+def test_runner_is_reproducible():
+    first_run = run_evaluation(SAMPLE_DATASET, k=2)
+    second_run = run_evaluation(SAMPLE_DATASET, k=2)
+
+    assert first_run == second_run
+
+
+@pytest.mark.parametrize("k", [0, -1, True, 1.5])
+def test_runner_rejects_invalid_k(k):
+    with pytest.raises(ValueError, match="k must be a positive integer"):
+        run_evaluation(SAMPLE_DATASET, k=k)
+
+
+def test_runner_returns_zero_aggregates_for_dataset_with_no_questions(tmp_path: Path):
+    dataset_path = tmp_path / "empty_questions.json"
+    dataset_path.write_text(
+        json.dumps(
+            {
+                "dataset_id": "empty_questions",
+                "schema_version": 1,
+                "documents": [],
+                "queries": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_evaluation(dataset_path, k=2)
+
+    assert result["per_question"] == []
+    assert result["aggregate_metrics"] == {
+        "recall_at_k": 0.0,
+        "mrr": 0.0,
+        "ndcg_at_k": 0.0,
+    }
+
+
+def test_runner_does_not_ignore_retrieval_failure(tmp_path: Path):
+    dataset_path = tmp_path / "questions_without_documents.json"
+    dataset_path.write_text(
+        json.dumps(
+            {
+                "dataset_id": "no_documents",
+                "schema_version": 1,
+                "documents": [],
+                "queries": [
+                    {
+                        "question_id": "q1",
+                        "question": "A question?",
+                        "relevance": [],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="dataset with no documents"):
+        run_evaluation(dataset_path, k=2)
