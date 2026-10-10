@@ -6,7 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from src.history import initialize_database, save_run
+from src.history import (
+    IncompatibleRunsError,
+    RunNotFoundError,
+    compare_runs,
+    initialize_database,
+    list_runs,
+    save_run,
+)
 
 
 SAMPLE_RESULT = {
@@ -32,6 +39,24 @@ SAMPLE_RESULT = {
         "ndcg_at_k": 0.85,
     },
 }
+
+
+def make_result(
+    *,
+    dataset_id: str = "ragwatch_tiny_sample_v1",
+    k: int = 2,
+    aggregate_metrics: dict | None = None,
+    per_question: list[dict] | None = None,
+) -> dict:
+    """Build an independent, valid runner-shaped result for history tests."""
+    return {
+        "dataset_id": dataset_id,
+        "k": k,
+        "aggregate_metrics": aggregate_metrics or dict(SAMPLE_RESULT["aggregate_metrics"]),
+        "per_question": per_question
+        if per_question is not None
+        else [dict(question) for question in SAMPLE_RESULT["per_question"]],
+    }
 
 
 def test_initialization_creates_tables_and_foreign_key(tmp_path: Path):
@@ -194,3 +219,156 @@ def test_save_run_rejects_non_finite_aggregate_scores(
 
     with pytest.raises(ValueError, match="mrr must be a finite number from 0 to 1"):
         save_run(tmp_path / "history.sqlite3", invalid_result)
+
+
+def test_list_runs_returns_newest_first_with_aggregate_metrics(tmp_path: Path):
+    database_path = tmp_path / "history.sqlite3"
+    initialize_database(database_path)
+    older_run_id = save_run(database_path, SAMPLE_RESULT)
+    newer_run_id = save_run(database_path, SAMPLE_RESULT)
+
+    runs = list_runs(database_path)
+
+    assert [run["run_id"] for run in runs] == [newer_run_id, older_run_id]
+    assert runs[0]["dataset_id"] == "ragwatch_tiny_sample_v1"
+    assert runs[0]["k"] == 2
+    assert runs[0]["created_at"].endswith("Z")
+    assert runs[0]["aggregate_metrics"] == SAMPLE_RESULT["aggregate_metrics"]
+
+
+def test_list_runs_returns_empty_list_for_empty_history(tmp_path: Path):
+    database_path = tmp_path / "history.sqlite3"
+    initialize_database(database_path)
+
+    assert list_runs(database_path) == []
+
+
+def test_compare_identical_runs_has_zero_differences(tmp_path: Path):
+    database_path = tmp_path / "history.sqlite3"
+    initialize_database(database_path)
+    baseline_id = save_run(database_path, SAMPLE_RESULT)
+    candidate_id = save_run(database_path, SAMPLE_RESULT)
+
+    comparison = compare_runs(database_path, baseline_id, candidate_id)
+
+    assert comparison["aggregate_differences"] == {
+        "recall_at_k": 0.0,
+        "mrr": 0.0,
+        "ndcg_at_k": 0.0,
+    }
+    assert all(
+        question["differences"] == {
+            "recall_at_k": 0.0,
+            "reciprocal_rank": 0.0,
+            "ndcg_at_k": 0.0,
+        }
+        for question in comparison["question_comparisons"]
+    )
+
+
+def test_compare_reports_positive_and_negative_differences(tmp_path: Path):
+    database_path = tmp_path / "history.sqlite3"
+    initialize_database(database_path)
+    baseline = make_result(
+        aggregate_metrics={"recall_at_k": 0.4, "mrr": 0.8, "ndcg_at_k": 0.5}
+    )
+    candidate = make_result(
+        aggregate_metrics={"recall_at_k": 0.7, "mrr": 0.3, "ndcg_at_k": 0.6}
+    )
+    baseline_id = save_run(database_path, baseline)
+    candidate_id = save_run(database_path, candidate)
+
+    comparison = compare_runs(database_path, baseline_id, candidate_id)
+
+    assert comparison["aggregate_differences"] == pytest.approx(
+        {"recall_at_k": 0.3, "mrr": -0.5, "ndcg_at_k": 0.1}
+    )
+
+
+def test_compare_matches_questions_by_id_when_row_order_differs(tmp_path: Path):
+    database_path = tmp_path / "history.sqlite3"
+    initialize_database(database_path)
+    baseline_questions = [
+        {"question_id": "q_one", "recall_at_k": 0.2, "reciprocal_rank": 0.4, "ndcg_at_k": 0.3},
+        {"question_id": "q_two", "recall_at_k": 0.5, "reciprocal_rank": 0.6, "ndcg_at_k": 0.7},
+    ]
+    candidate_questions = [
+        {"question_id": "q_two", "recall_at_k": 0.8, "reciprocal_rank": 0.9, "ndcg_at_k": 0.9},
+        {"question_id": "q_one", "recall_at_k": 0.6, "reciprocal_rank": 0.2, "ndcg_at_k": 0.5},
+    ]
+    baseline_id = save_run(database_path, make_result(per_question=baseline_questions))
+    candidate_id = save_run(database_path, make_result(per_question=candidate_questions))
+
+    comparison = compare_runs(database_path, baseline_id, candidate_id)
+
+    comparisons = {
+        question["question_id"]: question
+        for question in comparison["question_comparisons"]
+    }
+    assert comparisons["q_one"]["differences"] == pytest.approx(
+        {"recall_at_k": 0.4, "reciprocal_rank": -0.2, "ndcg_at_k": 0.2}
+    )
+    assert comparisons["q_two"]["differences"] == pytest.approx(
+        {"recall_at_k": 0.3, "reciprocal_rank": 0.3, "ndcg_at_k": 0.2}
+    )
+
+
+def test_compare_identifies_questions_present_in_only_one_run(tmp_path: Path):
+    database_path = tmp_path / "history.sqlite3"
+    initialize_database(database_path)
+    baseline_questions = [
+        dict(SAMPLE_RESULT["per_question"][0]),
+        {"question_id": "q_removed", "recall_at_k": 0.2, "reciprocal_rank": 0.2, "ndcg_at_k": 0.2},
+    ]
+    candidate_questions = [
+        dict(SAMPLE_RESULT["per_question"][0]),
+        {"question_id": "q_added", "recall_at_k": 0.3, "reciprocal_rank": 0.3, "ndcg_at_k": 0.3},
+    ]
+    baseline_id = save_run(database_path, make_result(per_question=baseline_questions))
+    candidate_id = save_run(database_path, make_result(per_question=candidate_questions))
+
+    comparison = compare_runs(database_path, baseline_id, candidate_id)
+
+    comparisons = {
+        question["question_id"]: question
+        for question in comparison["question_comparisons"]
+    }
+    assert comparisons["q_added"]["status"] == "candidate_only"
+    assert comparisons["q_added"]["baseline_metrics"] is None
+    assert comparisons["q_added"]["differences"] is None
+    assert comparisons["q_removed"]["status"] == "baseline_only"
+    assert comparisons["q_removed"]["candidate_metrics"] is None
+    assert comparisons["q_removed"]["differences"] is None
+
+
+@pytest.mark.parametrize(
+    ("baseline_id", "candidate_id", "missing_name"),
+    [(999, 1, "Baseline"), (1, 999, "Candidate")],
+)
+def test_compare_reports_missing_run_ids(
+    tmp_path: Path, baseline_id: int, candidate_id: int, missing_name: str
+):
+    database_path = tmp_path / "history.sqlite3"
+    initialize_database(database_path)
+    if baseline_id == 1:
+        save_run(database_path, SAMPLE_RESULT)
+
+    with pytest.raises(RunNotFoundError, match=missing_name):
+        compare_runs(database_path, baseline_id, candidate_id)
+
+
+@pytest.mark.parametrize(
+    ("candidate_changes", "message"),
+    [({"dataset_id": "another_dataset"}, "different dataset IDs"), ({"k": 3}, "different k values")],
+)
+def test_compare_rejects_incompatible_runs(
+    tmp_path: Path, candidate_changes: dict, message: str
+):
+    database_path = tmp_path / "history.sqlite3"
+    initialize_database(database_path)
+    baseline_id = save_run(database_path, SAMPLE_RESULT)
+    candidate_result = make_result(**candidate_changes)
+    candidate_id = save_run(database_path, candidate_result)
+
+    with pytest.raises(IncompatibleRunsError, match=message):
+        compare_runs(database_path, baseline_id, candidate_id)
